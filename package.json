@@ -1,0 +1,16 @@
+{
+  "name": "fire-front",
+  "version": "0.0.1",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "build": "rollup -c",
+    "develop": "rollup -cw -m"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "rollup": "^2.50.6",
+    "rollup-plugin-terser": "^7.0.2"
+  }
+}
