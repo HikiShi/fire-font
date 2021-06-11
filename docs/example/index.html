@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fire front example</title>
+    <script src="./index.js"></script>
+</head>
+<body>
+
+  <form>
+    <div>
+      <label for="font-size-input">Font size</label>
+      <input type="range" id="font-size-input" name="font-size" min="1" max="300" value="72" />
+    </div>
+
+
+    <div>
+      <label for="fired-text-input">Fired text</label>
+      <input type="text" id="fired-text-input" name="text-to-fire" value="JOPA" />
+    </div>
+
+
+    <div>
+      <label for="fired-color-input">Text color</label>
+      <input type="color" id="fired-color-input" name="text-color" value="#ff2400"/>
+    </div>
+
+
+    <div>
+      <label for="fired-stroke-color-input">Text stroke color</label>
+      <input type="color" id="fired-stroke-color-input" name="text-stroke-color" value="#0000ff"/>
+    </div>
+
+    <div>
+      <label for="font-stroke-size-input">Font stroke size</label>
+      <input type="range" id="font-stroke-size-input" name="stroke-size" min="0" max="10" value="2" />
+    </div>
+
+    <button type="button" id="restart-aimation" >Start animation again</button>
+
+   </form>
+
+    <div id="block"  style="padding: 300px 100px; color: red; -webkit-text-stroke: 1px blue; font-size: 72px;">
+        JOPA
+    </div>
+
+
+<script>
+    var targetElement = document.getElementById('block');
+
+    function syncSearchParamsWithInput () {
+      var urlParams = new URLSearchParams(window.location.search);
+      
+      targetElement.innerText = urlParams.get("text");
+      document.getElementById('fired-text-input').value = urlParams.get("text");
+      
+      targetElement.style.fontSize = urlParams.get("fontSize") + 'px';
+      document.getElementById('font-size-input').value = urlParams.get("fontSize");
+
+      targetElement.style.color = urlParams.get("color");
+      document.getElementById('fired-color-input').value = urlParams.get("color");
+
+
+      targetElement.style['-webkit-text-stroke'] = urlParams.get("textStrokeSize") + 'px' + urlParams.get("strokeColor");
+      document.getElementById('fired-stroke-color-input').value = urlParams.get("strokeColor");
+      document.getElementById('font-stroke-size-input').value = urlParams.get("textStrokeSize");
+    } 
+
+    function sciptFireAnimation() {
+      Array.from(targetElement.children).forEach(element => {
+        // disable animation
+        element.style.animationDuration = '0s';
+        element.style.animationDelay = '0s';
+      });
+    }
+
+    function initialize() {
+      syncSearchParamsWithInput();
+      makeSuperFireFontFromSimpleElementWithPlaneText(targetElement);
+    }
+
+
+    function createTextParamChangeHeandler(param) {
+      return function (event) {
+        var urlParams = new URLSearchParams(window.location.search);
+
+        urlParams.set(param, event.target.value);
+        window.history.pushState({}, '',  window.location.protocol + "//" + window.location.host + window.location.pathname + '?' + urlParams.toString())
+
+        syncSearchParamsWithInput();
+        makeSuperFireFontFromSimpleElementWithPlaneText(targetElement);
+        sciptFireAnimation();
+      }
+    } 
+
+    initialize();
+
+
+   
+   
+    document.getElementById('font-size-input').addEventListener('change', createTextParamChangeHeandler('fontSize'));
+    document.getElementById('fired-text-input').addEventListener('input', createTextParamChangeHeandler('text'));
+    document.getElementById('fired-color-input').addEventListener('input', createTextParamChangeHeandler('color'));
+    document.getElementById('fired-stroke-color-input').addEventListener('input', createTextParamChangeHeandler('strokeColor'));
+    document.getElementById('font-stroke-size-input').addEventListener('input', createTextParamChangeHeandler('textStrokeSize'));
+
+
+    document.getElementById('restart-aimation').addEventListener('click', function(){
+        window.location.reload();
+    })
+
+</script>
+</html>

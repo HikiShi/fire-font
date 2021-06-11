@@ -1,22 +1,45 @@
 import { measureTextWidthInStyleContext } from "./measureTextWidthInStyleContext";
 import { firefontKeyframesName } from "./mountFireFontKeyframesInDocumentHead";
 
-export default makeSuperFireFontFromSimpleElementWithPlaneText = (
-  textElement
-) => {
-  const textToFire = getTextFromElement(textElement);
-  const textElementStyles = getElementStyles(textElement);
 
-  clearTextInElement(textElement);
+
+function debounce(func, wait, immediate) {
+  let timeout;
+
+  return function executedFunction() {
+    const context = this;
+    const args = arguments;
+
+    const later = function() {
+      timeout = null;
+      if (!immediate) func.apply(context, args);
+    };
+
+    const callNow = immediate && !timeout;
+
+    clearTimeout(timeout);
+
+    timeout = setTimeout(later, wait);
+
+    if (callNow) func.apply(context, args);
+  };
+};
+
+export default makeSuperFireFontFromSimpleElementWithPlaneText = (
+  targetElementWithTextNode
+) => {
+  const textToFire = getTextFromElement(targetElementWithTextNode);
+
+  clearTextInElement(targetElementWithTextNode);
 
   Array.from(textToFire).forEach((symbol, symbolNumber) => {
     const fireSymbol = getFireSymbol({
       symbol,
       symbolNumber,
-      styles: textElementStyles,
+      rootElement: targetElementWithTextNode
     });
 
-    textElement.appendChild(fireSymbol);
+    targetElementWithTextNode.appendChild(fireSymbol);
   });
 };
 
@@ -30,9 +53,9 @@ const assignSymbolSymbolContainerStyles = ({
   symbolContainerElement,
   symbol,
   symbolNumber,
-  styles,
+  rootElement
 }) => {
-  const symbolWidth = measureTextWidthInStyleContext({ text: symbol, styles });
+  const symbolWidth = measureTextWidthInStyleContext({ text: symbol, styles: getElementStyles(rootElement) });
 
   Object.assign(symbolContainerElement.style, {
     width: `${symbolWidth}px`,
@@ -46,21 +69,31 @@ const assignSymbolSymbolContainerStyles = ({
     "transform-origin": "center",
     animationDelay: `${symbolNumber * 0.5}s`,
   });
+
+
+   const rootElemnetResizeObserver = new ResizeObserver(debounce(() => {
+      const symbolWidthAfterResize = measureTextWidthInStyleContext({ text: symbol, styles: getElementStyles(rootElement) });
+      
+      symbolContainerElement.style.width = `${symbolWidthAfterResize}px`;
+   }, 500));
+
+   rootElemnetResizeObserver.observe(rootElement);
 };
 
-const createSymbolContainer = ({ symbol, styles, symbolNumber }) => {
+const createSymbolContainer = ({ symbol, rootElement, symbolNumber }) => {
   const symbolContainerElement = document.createElement("div");
   assignSymbolSymbolContainerStyles({
     symbolContainerElement,
     symbol,
     symbolNumber,
-    styles,
+    rootElement
   });
+
 
   return symbolContainerElement;
 };
 
-const addFireSymbolsInContainer = ({ symbolConainer, symbol, styles }) => {
+const addFireSymbolsInContainer = ({ symbolConainer, symbol, rootElement }) => {
   const numberOfSymbolLayer = 10;
   // comments sucks
   const theNumberObtainedEmpiricallyIsTheRatioOfTheFontSizeToTheThicknessOfTheResultingSymbolFromTheLayer = 0.0042;
@@ -68,25 +101,23 @@ const addFireSymbolsInContainer = ({ symbolConainer, symbol, styles }) => {
   for (let i = 0; i < numberOfSymbolLayer; i++) {
     const symbolElem = document.createElement("span");
     symbolElem.innerText = symbol;
-
+    
     symbolConainer.appendChild(symbolElem);
     symbolElem.style.position = "absolute";
-    symbolElem.style.transform = `translateZ(${
-      i *
-      (Number.parseInt(styles.fontSize, 10) *
-        theNumberObtainedEmpiricallyIsTheRatioOfTheFontSizeToTheThicknessOfTheResultingSymbolFromTheLayer)
-    }px)`;
+    symbolElem.style.transform = `translateZ(calc(1em * ${
+      i * theNumberObtainedEmpiricallyIsTheRatioOfTheFontSizeToTheThicknessOfTheResultingSymbolFromTheLayer
+   }))`;
   }
 };
 
-const createFireSymbol = ({ symbol, symbolNumber, styles }) => {
+const createFireSymbol = ({ symbol, symbolNumber, rootElement }) => {
   const symbolConainer = createSymbolContainer({
     symbol,
     symbolNumber,
-    styles,
+    rootElement
   });
 
-  addFireSymbolsInContainer({ symbolConainer, symbol, styles });
+  addFireSymbolsInContainer({ symbolConainer, symbol, rootElement });
 
   return symbolConainer;
 };
@@ -98,12 +129,15 @@ const createEmptySymbol = () => {
   return symbolElem;
 };
 
-const getFireSymbol = ({ symbol, symbolNumber, styles }) => {
+const getFireSymbol = ({ symbol, symbolNumber, rootElement }) => {
   if (symbol === " ") {
     return createEmptySymbol();
   }
 
-  return createFireSymbol({ symbol, symbolNumber, styles });
+  return createFireSymbol({ symbol, symbolNumber, rootElement });
 };
 
 const getElementStyles = (textElement) => window.getComputedStyle(textElement);
+
+
+
