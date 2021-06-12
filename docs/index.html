@@ -9,7 +9,7 @@
 </head>
 <body>
 
-  <form>
+  <form style="display: flex; flex-wrap: wrap; gap: 10px;">
     <div>
       <label for="font-size-input">Font size</label>
       <input type="range" id="font-size-input" name="font-size" min="1" max="300" value="72" />
@@ -42,7 +42,7 @@
 
    </form>
 
-    <div id="block"  style="padding: 300px 100px; color: red; -webkit-text-stroke: 1px blue; font-size: 72px;">
+    <div id="block"  style="padding: 200px 100px; color: red; -webkit-text-stroke: 1px blue; font-size: 72px;">
         JOPA
     </div>
 
@@ -50,11 +50,18 @@
 <script>
     var targetElement = document.getElementById('block');
 
-    function syncSearchParamsWithInput () {
+    function syncText () {
       var urlParams = new URLSearchParams(window.location.search);
       
       targetElement.innerText = urlParams.get("text");
       document.getElementById('fired-text-input').value = urlParams.get("text");
+
+      makeSuperFireFontFromSimpleElementWithPlaneText(targetElement);
+    } 
+    
+    
+    function syncStyles() {
+      var urlParams = new URLSearchParams(window.location.search);
       
       targetElement.style.fontSize = urlParams.get("fontSize") + 'px';
       document.getElementById('font-size-input').value = urlParams.get("fontSize");
@@ -66,7 +73,8 @@
       targetElement.style['-webkit-text-stroke'] = urlParams.get("textStrokeSize") + 'px' + urlParams.get("strokeColor");
       document.getElementById('fired-stroke-color-input').value = urlParams.get("strokeColor");
       document.getElementById('font-stroke-size-input').value = urlParams.get("textStrokeSize");
-    } 
+    }
+
 
     function sciptFireAnimation() {
       Array.from(targetElement.children).forEach(element => {
@@ -77,8 +85,8 @@
     }
 
     function initialize() {
-      syncSearchParamsWithInput();
-      makeSuperFireFontFromSimpleElementWithPlaneText(targetElement);
+      syncText();
+      syncStyles();
     }
 
 
@@ -89,14 +97,17 @@
         urlParams.set(param, event.target.value);
         window.history.pushState({}, '',  window.location.protocol + "//" + window.location.host + window.location.pathname + '?' + urlParams.toString())
 
-        syncSearchParamsWithInput();
-        makeSuperFireFontFromSimpleElementWithPlaneText(targetElement);
-        sciptFireAnimation();
+        if(param === 'text') {
+            syncText();
+            return;
+        }
+
+        syncStyles();
       }
-    } 
+    }
+  
 
     initialize();
-
 
    
    
